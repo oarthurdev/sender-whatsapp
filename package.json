@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node chatbot.js"
+    "start": "node sender.js"
   },
   "author": "",
   "license": "ISC",
