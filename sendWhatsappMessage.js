@@ -36,4 +36,6 @@ export function sendWhatsappMessage(to, message, mediaUrl = null) {
         });
       }
     });
+
+    
 }
