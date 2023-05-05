@@ -15,7 +15,7 @@ function greeting() {
 function askAnotherMessage() {
   rl.question(chalk.yellow('\nDeseja enviar outra mensagem? (sim/não) '), (answer) => {
     if (answer.toLowerCase() === 'sim') {
-      askRecipientAndMessage();
+      askForCountryCode();
     } else {
       console.log(chalk.green('Obrigado por usar o nosso chatbot! Até a próxima.'));
       rl.close();
