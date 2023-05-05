@@ -2,41 +2,14 @@ import readline from 'readline';
 import { sendWhatsappMessage } from './sendWhatsappMessage.js';
 import countries from './countries.js';
 import chalk from 'chalk';
+import emojiRegex from "emoji-regex"
+import { greeting } from './greeting.js';
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-function greeting() {
-  console.log(chalk.blue.bold(`
-
-  ⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣤⣶⣶⣶⣶⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⢀⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⡀⠀⠀⠀⠀
-⠀⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀⠀
-⠀⢀⣾⣿⣿⣿⣿⡿⠟⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠀
-⠀⣾⣿⣿⣿⣿⡟⠀⠀⠀⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠀
-⢠⣿⣿⣿⣿⣿⣧⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄
-⢸⣿⣿⣿⣿⣿⣿⣦⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇
-⠘⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠈⠻⢿⣿⠟⠉⠛⠿⣿⣿⣿⣿⣿⣿⠃
-⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⡀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⡿⠀
-⠀⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣤⣤⣴⣾⣿⣿⣿⣿⡿⠁⠀
-⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀⠀
-⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀
-⠠⠛⠛⠛⠉⠁⠀⠈⠙⠛⠛⠿⠿⠿⠿⠛⠛⠋⠁⠀⠀          
-
-
-░██████╗███████╗███╗░░██╗██████╗░███████╗██████╗░
-██╔════╝██╔════╝████╗░██║██╔══██╗██╔════╝██╔══██╗
-╚█████╗░█████╗░░██╔██╗██║██║░░██║█████╗░░██████╔╝
-░╚═══██╗██╔══╝░░██║╚████║██║░░██║██╔══╝░░██╔══██╗
-██████╔╝███████╗██║░╚███║██████╔╝███████╗██║░░██║
-╚═════╝░╚══════╝╚═╝░░╚══╝╚═════╝░╚══════╝╚═╝░░╚═╝
-
-
-By: Arthur Wagenknecht (oarthurdev@gmail.com) - 05/05/2023
-`));
-}
 async function askAnotherMessage() {
   const answer = await askYesOrNo(chalk.yellow('\nDeseja enviar outra mensagem? '));
   if (answer) {
@@ -66,7 +39,7 @@ async function askForMessage(prefix, phoneNumber) {
   const hasMedia = await askYesOrNo(chalk.yellow('Você gostaria de enviar uma imagem junto com a mensagem? '));
 
   let mediaUrl;
-  
+
   if (hasMedia) {
     mediaUrl = await askUrl(chalk.yellow('Digite a URL da imagem: '));
   }
@@ -84,7 +57,13 @@ async function askForMessage(prefix, phoneNumber) {
 
 function ask(question) {
   return new Promise((resolve) => {
-    rl.question(question, resolve);
+    rl.question(question, (answer) => {
+      if (containsEmoji(answer)) {
+        resolve(answer);
+      } else {
+        resolve(answer.trim());
+      }
+    });
   });
 }
 
@@ -138,12 +117,13 @@ async function askUrl(question) {
 }
 
 function isValidUrl(url) {
-  try {
-    new URL(url);
-    return true;
-  } catch (error) {
-    return false;
-  }
+  const urlRegex = /\.(gif|jpe?g|tiff?|png|webp|bmp)$/i;
+  return urlRegex.test(url);
+}
+
+function containsEmoji(text) {
+  const regex = emojiRegex();
+  return regex.test(text);
 }
 
 greeting();
