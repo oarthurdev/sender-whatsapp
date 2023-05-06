@@ -15,7 +15,7 @@ async function askAnotherMessage() {
   if (answer) {
     askForCountryCode();
   } else {
-    console.log(chalk.green('Obrigado por usar o nosso chatbot! Até a próxima.'));
+    console.log(chalk.green('Até a próxima.'));
     rl.close();
   }
 }
