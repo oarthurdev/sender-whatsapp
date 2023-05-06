@@ -35,22 +35,42 @@ async function askForCountryCode() {
 }
 
 async function askForMessage(prefix, phoneNumber) {
-  const message = await ask(chalk.yellow('Qual mensagem você gostaria de enviar? '));
+  let message = await ask(chalk.yellow('Qual mensagem você gostaria de enviar? '));
+
+  while (message.trim() === '') {
+    console.error(chalk.red('Mensagem inválida. Por favor, digite uma mensagem válida.'));
+    message = await ask(chalk.yellow('Qual mensagem você gostaria de enviar? '));
+  }
+
   const hasMedia = await askYesOrNo(chalk.yellow('Você gostaria de enviar uma imagem junto com a mensagem? '));
 
   let mediaUrl;
 
   if (hasMedia) {
     mediaUrl = await askUrl(chalk.yellow('Digite a URL da imagem: '));
+
+    while (!isValidUrl(mediaUrl)) {
+      console.error(chalk.red('URL inválida. Por favor, digite uma URL válida.'));
+      mediaUrl = await askUrl(chalk.yellow('Digite a URL da imagem: '));
+    }
   }
 
-  try {
-    const response = await sendWhatsappMessage(`${prefix}${phoneNumber}`, message, mediaUrl);
-    console.log(chalk.green(`\nMensagem enviada para ${prefix}${phoneNumber}. SID: ${response.sid}\n`));
+  const confirmMessage = chalk.bold(`Confirme as informações:\n\nDestinatário: ${prefix}${phoneNumber}\nMensagem: ${message}\n${mediaUrl ? `Imagem: ${mediaUrl}\n` : ''}`);
+
+  const isConfirmed = await askYesOrNo(chalk.yellow(`${confirmMessage}Enviar mensagem? `));
+
+  if (isConfirmed) {
+    try {
+      const response = await sendWhatsappMessage(`${prefix}${phoneNumber}`, message, mediaUrl);
+      console.log(chalk.green(`\nMensagem enviada para ${prefix}${phoneNumber}. SID: ${response.sid}\n`));
+    } catch (error) {
+      console.error(chalk.red('Erro ao enviar a mensagem:', error));
+      console.error(chalk.red('Certifique-se de que o número de telefone seja um número de telefone válido registrado no WhatsApp e verificado na sua conta Twilio.'));
+    }
+
     askAnotherMessage();
-  } catch (error) {
-    console.error(chalk.red('Erro ao enviar a mensagem:', error));
-    console.error(chalk.red('Certifique-se de que o número de telefone seja um número de telefone válido registrado no WhatsApp e verificado na sua conta Twilio.'));
+  } else {
+    console.log(chalk.yellow('Envio de mensagem cancelado.'));
     askAnotherMessage();
   }
 }
@@ -74,17 +94,21 @@ async function askValidNumber(question, min, max = Infinity) {
   while (!isValidNumber(number, min, max)) {
     answer = await ask(question);
     number = parseInt(answer);
+
     if (!isValidNumber(number, min, max)) {
       console.error(chalk.red('Opção inválida. Por favor, tente novamente.'));
     }
   }
-
+    
+    
   return number;
 }
-
+    
+    
 function isValidNumber(number, min, max) {
   return Number.isInteger(number) && number >= min && number <= max;
 }
+
 
 async function askYesOrNo(question) {
   let answer = '';
@@ -96,12 +120,15 @@ async function askYesOrNo(question) {
     }
   }
 
+
   return answer.toLowerCase() === 'sim' || answer.toLowerCase() === 's';
 }
 
+
 function isValidYesOrNo(answer) {
-  return ['sim', 'não', 'nao', 's', 'n'].includes(answer.toLowerCase());
+  return ['sim', 'não', 'nao', 's', 'n', 'q', 'quit'].includes(answer.toLowerCase());
 }
+
 
 async function askUrl(question) {
   let answer = '';
@@ -116,15 +143,18 @@ async function askUrl(question) {
   return answer;
 }
 
+
 function isValidUrl(url) {
-  const urlRegex = /\.(gif|jpe?g|tiff?|png|webp|bmp)$/i;
+  const urlRegex = /.(gif|jpe?g|tiff?|png|webp|bmp)$/i;
   return urlRegex.test(url);
 }
+
 
 function containsEmoji(text) {
   const regex = emojiRegex();
   return regex.test(text);
 }
+
 
 greeting();
 askForCountryCode();
